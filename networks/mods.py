@@ -1,12 +1,22 @@
 import flax.linen as nn
 from typing import Any
+from config import cfg
 
 # for now, all networks will be basic MLPs
 # However, will add all the bells and whistles once I get the basic implementation done
 
 # ensemblize; not sure how to implement
-def ensemblize():
-    pass
+def ensemblize(cls, num_qs, out_axes=0, **kwargs):
+    """Ensemblize a module."""
+    return nn.vmap(
+        cls,
+        variable_axes={'params': 0},
+        split_rngs={'params': True},
+        in_axes=None,
+        out_axes=out_axes,
+        axis_size=num_qs,
+        **kwargs,
+    )
 
 class MLP(nn.Module):
     
@@ -23,3 +33,5 @@ class MLP(nn.Module):
                 if self.layer_norm:
                     x = nn.LayerNorm()(x)
         return x
+
+MLP = ensemblize(MLP, cfg.num_ensemble)

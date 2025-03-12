@@ -1,6 +1,6 @@
 import flax.linen as nn
 from typing import Any
-from mods import MLP
+from networks.mods import MLP
 import jax.numpy as jnp
 
 
@@ -14,7 +14,7 @@ class LowPolicy(nn.Module): # state, subgoal => action
         self.low_policy = MLP(self.hidden_dims, self.activation, self.layer_norm)
     
     def __call__(self, obs, subgoals):
-        return self.low_policy(jnp.append(obs, subgoals))
+        return self.low_policy(jnp.append(obs, subgoals, axis=1))
 
 class HighPolicy(nn.Module): # state, goal => subgoal
     hidden_dims: tuple[int, ...]
@@ -26,7 +26,7 @@ class HighPolicy(nn.Module): # state, goal => subgoal
         self.high_policy = MLP(self.hidden_dims, self.activation, self.layer_norm)
         
     def __call__(self, obs, goals):
-        return self.high_policy(jnp.append(obs, goals))
+        return self.high_policy(jnp.append(obs, goals, axis=1))
 
 
 class ValueNet(nn.Module): # state, (sub)goal (rep) => value
@@ -41,8 +41,8 @@ class ValueNet(nn.Module): # state, (sub)goal (rep) => value
     def __call__(self, obs, goals):
         if self.goal_rep:
             pass
-        # something 
-        return self.value_net(jnp.append(obs, goals))
+
+        return self.value_net(jnp.append(obs, goals, axis=1))
 
 
 class GoalRep(nn.Module): # (sub)goal => (sub)goal rep

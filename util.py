@@ -30,7 +30,6 @@ class ModuleDict(nn.Module):
     
 class TrainState(flax.struct.PyTreeNode):
     step: int
-    config: dict
     params: Any
     apply_fn: Any = nonpytree_field()
     model_arch: Any = nonpytree_field()
@@ -44,7 +43,6 @@ class TrainState(flax.struct.PyTreeNode):
         model_arch, # will be the grand moduledict
         params, # will be set of params initialized on moduledict
         tx, # optax optim
-        config # dict from config.py
     ): 
         if tx:
             opt_state = tx.init(params)
@@ -56,7 +54,6 @@ class TrainState(flax.struct.PyTreeNode):
             model_arch=model_arch,
             tx=tx,
             opt_state = opt_state,
-            config = config,
             params = params
         )
     
