@@ -3,7 +3,7 @@ from typing import Any
 from config import cfg
 
 # for now, all networks will be basic MLPs
-# However, will add all the bells and whistles once I get the basic implementation done
+# However, will add all the bells and whistles (ie mean nets) once I get the basic implementation done
 
 # ensemblize; not sure how to implement
 def ensemblize(cls, num_qs, out_axes=0, **kwargs):
@@ -33,5 +33,3 @@ class MLP(nn.Module):
                 if self.layer_norm:
                     x = nn.LayerNorm()(x)
         return x
-
-MLP = ensemblize(MLP, cfg.num_ensemble)

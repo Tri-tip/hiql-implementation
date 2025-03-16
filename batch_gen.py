@@ -1,16 +1,12 @@
 from collections import namedtuple
+
+import flax.struct
 import jax, jax.numpy as jnp
 import ogbench
 from flax.core.frozen_dict import FrozenDict
 import numpy as np
 from config import cfg
 
-dataset_name = 'antmaze-large-navigate-v0'
-env, train_dataset, val_dataset = ogbench.make_env_and_datasets(
-    dataset_name,  # Dataset name.
-    dataset_dir='~/.ogbench/data',  # Directory to save datasets (optional).
-    compact_dataset=False,  # Whether to use a compact dataset (optional; see below).
-)
 
 Batch = namedtuple("Batch",
                    "obs "
@@ -154,6 +150,3 @@ class Dataset(FrozenDict):
             high_actor_targets=batch["high_actor_targets"],
             actions=batch["actions"]
         )
-
-dataset = Dataset.create(**train_dataset)
-l = dataset.sample(3)
