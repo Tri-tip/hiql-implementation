@@ -2,6 +2,7 @@ import flax.linen as nn
 from typing import Any
 from config import cfg
 
+
 # for now, all networks will be basic MLPs
 # However, will add all the bells and whistles (ie mean nets) once I get the basic implementation done
 
@@ -18,12 +19,12 @@ def ensemblize(cls, num_qs, out_axes=0, **kwargs):
         **kwargs,
     )
 
+
 class MLP(nn.Module):
-    
     hidden_dims: tuple[int, ...]
     activation: Any = nn.relu
     layer_norm: bool = True
-    
+
     @nn.compact
     def __call__(self, x):
         for i, layer_dim in enumerate(self.hidden_dims):

@@ -12,19 +12,6 @@ def default_init(scale=1.0):
 
 
 class GCActor(nn.Module):
-    """Goal-conditioned actor.
-
-    Attributes:
-        hidden_dims: Hidden layer dimensions.
-        final_dim: Final dimension.
-        log_std_min: Minimum value of log standard deviation.
-        log_std_max: Maximum value of log standard deviation.
-        tanh_squash: Whether to squash the action with tanh.
-        state_dependent_std: Whether to use state-dependent standard deviation.
-        const_std: Whether to use constant standard deviation.
-        final_fc_init_scale: Initial scale of the final fully-connected layer.
-    """
-
     hidden_dims: tuple[int, ...]
     final_dim: int
     log_std_min: int = -5
@@ -50,14 +37,7 @@ class GCActor(nn.Module):
             goal_encoded=False,
             temperature=1.0,
     ):
-        """Return the action distribution.
 
-        Args:
-            observations: Observations.
-            goals: Goals (optional).
-            goal_encoded: Whether the goals are already encoded.
-            temperature: Scaling factor for the standard deviation.
-        """
         inputs = [observations]
         if goals is not None:
             inputs.append(goals)
@@ -109,7 +89,7 @@ class GCActor(nn.Module):
 #         return dist
 #
 
-class ValueNet(nn.Module): # state, (sub)goal (rep) => value
+class ValueNet(nn.Module):  # state, (sub)goal (rep) => value
     hidden_dims: tuple[int, ...]
     activation: Any = nn.relu
     layer_norm: bool = True

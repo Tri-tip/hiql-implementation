@@ -7,7 +7,6 @@ from flax.core.frozen_dict import FrozenDict
 import numpy as np
 from config import cfg
 
-
 Batch = namedtuple("Batch",
                    "obs "
                    "next_obs "

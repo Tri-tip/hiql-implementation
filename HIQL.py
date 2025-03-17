@@ -9,17 +9,18 @@ import optax
 import functools as ft
 from typing import Any
 
+
 class HIQLAgent(flax.struct.PyTreeNode):
     train_state: utils.TrainState
     action_space: int
     state_space: int
 
     # expectile loss: MSE, but weight adv >= 0 differently than adv < 0
-    def expectile_loss(self, ME, adv, expectile = cfg.expectile):
+    def expectile_loss(self, ME, adv, expectile=cfg.expectile):
         weight = jnp.where(adv >= 0, expectile, (1 - expectile))
         return weight * (ME ** 2)
 
-    def high_actor_loss(self, params, batch: Batch): # standard A2C loss method
+    def high_actor_loss(self, params, batch: Batch):  # standard A2C loss method
         high_actor_net = ft.partial(self.train_state.select("high_lvl_policy"), params=params)
         value_net = ft.partial(self.train_state.select("value_net"))
 
@@ -37,10 +38,10 @@ class HIQLAgent(flax.struct.PyTreeNode):
         curr_dist = high_actor_net(batch.obs, batch.high_actor_goals, params=params)
         log_loss = curr_dist.log_prob(batch.high_actor_targets)
 
-        actor_loss = (-exp_a * log_loss).mean()
+        actor_loss = -(exp_a * log_loss).mean()
         return actor_loss
 
-    def low_actor_loss(self, params, batch: Batch): # standard A2C loss method
+    def low_actor_loss(self, params, batch: Batch):  # standard A2C loss method
         low_actor_net = ft.partial(self.train_state.select("low_lvl_policy"), params=params)
         value_net = ft.partial(self.train_state.select("value_net"))
 
@@ -60,7 +61,7 @@ class HIQLAgent(flax.struct.PyTreeNode):
         log_loss = curr_dist.log_prob(
             batch.actions)  # log probs of every action in the batch, according to the distribution
 
-        actor_loss = (-exp_a * log_loss).mean()
+        actor_loss = -(exp_a * log_loss).mean()
         return actor_loss
 
     def value_loss(self, params, batch: Batch):
@@ -94,8 +95,8 @@ class HIQLAgent(flax.struct.PyTreeNode):
 
     @classmethod
     def create(cls, init_batch, action_space, state_space):
-        rng = jax.random.PRNGKey(cfg.seed)
-        rng, init_rng = jax.random.split(rng, 2)
+        rng1, rng2 = jax.random.split(jax.random.key(0))
+        rng, init_rng = jax.random.split(rng1, 2)
 
         networks = {
             "value_net": ValueNet(hidden_dims=cfg.value_HD),
@@ -105,7 +106,6 @@ class HIQLAgent(flax.struct.PyTreeNode):
             "high_lvl_policy": GCActor(hidden_dims=cfg.value_HD, final_dim=state_space, state_dependent_std=False,
                                        const_std=cfg.const_std),
         }
-
 
         network_args = {
             "value_net": (init_batch.obs, init_batch.value_goals),
@@ -122,10 +122,15 @@ class HIQLAgent(flax.struct.PyTreeNode):
         network = utils.TrainState.create(networks, params, network_optim)
         return cls(train_state=network, action_space=action_space, state_space=state_space)
 
-
     def sample_actions(self, obs):
         pass
 
-    def update(self):
-        pass
-    
+    @jax.jit
+    def update(self, batch):
+        def loss_fn(params):
+            return self.total_loss(params, batch)
+
+        new_train_state = self.train_state.apply_loss_and_grad(loss_fn)
+        self.train_state.fix_target()
+
+        return self.replace(train_state=new_train_state)
